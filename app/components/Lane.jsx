@@ -4,6 +4,7 @@ import connect from '../libs/connect';
 import Notes from './Notes';
 import NoteActions from '../actions/NoteActions';
 import LaneActions from '../actions/LaneActions';
+import LaneHeader from './LaneHeader';
 
 const Lane = (({lane, notes, NoteAtions, ...props}) => {
   const addNote = (e) => {
@@ -35,21 +36,13 @@ const Lane = (({lane, notes, NoteAtions, ...props}) => {
 
   return (
     <div {...props}>
-      <div className="lane-header">
-        <div className="lane-add-note">
-          <button className="add-note" onClick={ addNote }>+</button>
-        </div>
-        <div className="lane-name">{lane.name}</div>
-      </div>
-      <div>
-
-        <Notes
-          notes={selectNotesByIds(notes, lane.notes)}
-          onDelete={deleteNote}
-          onNoteClick={activateNoteEdit}
-          onEdit={editNote}
-        />
-      </div>
+      <LaneHeader lane={lane}/>
+      <Notes
+        notes={selectNotesByIds(notes, lane.notes)}
+        onDelete={deleteNote}
+        onNoteClick={activateNoteEdit}
+        onEdit={editNote}
+      />
     </div>
   );
 });
