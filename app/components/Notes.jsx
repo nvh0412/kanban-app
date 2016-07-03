@@ -1,11 +1,18 @@
 import React from 'react';
 import Note from './Note';
 import Editable from './Editable';
+import LaneActions from '../actions/LaneActions';
 
-export default ({notes, onNoteClick = () => {},  onDelete = () => {}, onEdit = () => {}}) => (
-  <ul className="notes">{notes.map(({ id, editing, task }) =>
-    <li key={ id }>
-      <Note className="note" onClick={onNoteClick.bind(null, id)}>
+export default ({
+  notes,
+  onNoteClick=() => {}, onEdit=() => {}, onDelete=() => {}
+}) => (
+  <ul className="notes">{notes.map(({id, editing, task}) =>
+    <li key={id}>
+      <Note className="note" id={id}
+        editing={editing}
+        onClick={onNoteClick.bind(null, id)}
+        onMove={LaneActions.move}>
         <Editable
           className="editable"
           editing={editing}
@@ -13,7 +20,7 @@ export default ({notes, onNoteClick = () => {},  onDelete = () => {}, onEdit = (
           onEdit={onEdit.bind(null, id)} />
         <button
           className="delete"
-          onClick={onDelete.bind(null,id)}>x</button>
+          onClick={onDelete.bind(null, id)}>x</button>
       </Note>
     </li>
   )}</ul>

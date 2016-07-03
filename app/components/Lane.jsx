@@ -1,63 +1,86 @@
 import React from 'react';
-import uuid from 'uuid';
+import {compose} from 'redux';
+import {DropTarget} from 'react-dnd';
+import ItemTypes from '../constants/itemTypes';
 import connect from '../libs/connect';
-import Notes from './Notes';
 import NoteActions from '../actions/NoteActions';
 import LaneActions from '../actions/LaneActions';
+import Notes from './Notes';
 import LaneHeader from './LaneHeader';
 
-const Lane = (({lane, notes, NoteAtions, ...props}) => {
-  const addNote = (e) => {
-    e.stopPropagation();
-
-    const noteId = uuid.v4()
-
-    NoteActions.create({
-      id: noteId,
-      task: 'New Task'
-    });
-    LaneActions.attachToLane({laneId: lane.id, noteId});
-  }
-
-  const deleteNote = (noteId, e) => {
-    //Avoid bubbling to edit
-    e.stopPropagation();
-    NoteActions.delete(noteId);
-    LaneActions.detachFromLane({laneID: lane.id , noteId});
-  }
-
-  const activateNoteEdit = (id) => {
-    NoteActions.update({id, editing: true});
-  }
-
+const Lane = ({
+  connectDropTarget, lane, notes, LaneActions, NoteActions, ...props
+}) => {
   const editNote = (id, task) => {
-    NoteActions.update({id, editing: false, task});
-  }
+    NoteActions.update({id, task, editing: false});
+  };
+  const deleteNote = (noteId, e) => {
+    e.stopPropagation();
 
-  return (
+    LaneActions.detachFromLane({
+      laneId: lane.id,
+      noteId
+    });
+    NoteActions.delete(noteId);
+  };
+  const activateNoteEdit = id => {
+    NoteActions.update({id, editing: true});
+  };
+
+  return connectDropTarget(
     <div {...props}>
-      <LaneHeader lane={lane}/>
+      <LaneHeader lane={lane} />
       <Notes
         notes={selectNotesByIds(notes, lane.notes)}
-        onDelete={deleteNote}
         onNoteClick={activateNoteEdit}
         onEdit={editNote}
-      />
+        onDelete={deleteNote} />
     </div>
   );
-});
+};
 
 function selectNotesByIds(allNotes, noteIds = []) {
+  // `reduce` is a powerful method that allows us to
+  // fold data. You can implement `filter` and `map`
+  // through it. Here we are using it to concatenate
+  // notes matching to the ids.
   return noteIds.reduce((notes, id) =>
+    // Concatenate possible matching ids to the result
     notes.concat(
       allNotes.filter(note => note.id === id)
     )
   , []);
 }
 
-export default connect(({notes}) => (
-  {notes}
-), {
-  NoteActions,
-  LaneActions
-})(Lane);
+const noteTarget = {
+  hover(targetProps, monitor) {
+    const sourceProps = monitor.getItem();
+    const sourceId = sourceProps.id;
+
+    // If the target lane doesn't have notes,
+    // attach the note to it.
+    //
+    // `attachToLane` performs necessarly
+    // cleanup by default and it guarantees
+    // a note can belong only to a single lane
+    // at a time.
+    if(!targetProps.lane.notes.length) {
+      LaneActions.attachToLane({
+        laneId: targetProps.lane.id,
+        noteId: sourceId
+      });
+    }
+  }
+};
+
+export default compose(
+  DropTarget(ItemTypes.NOTE, noteTarget, connect => ({
+    connectDropTarget: connect.dropTarget()
+  })),
+  connect(({notes}) => ({
+    notes
+  }), {
+    NoteActions,
+    LaneActions
+  })
+)(Lane)
