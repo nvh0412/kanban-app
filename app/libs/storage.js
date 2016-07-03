@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default () => ({
+export default storage => ({
   get(k) {
     try {
       return JSON.parse(storage.getItem(k));
