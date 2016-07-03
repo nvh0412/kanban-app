@@ -17,6 +17,25 @@ export default class LaneStore {
     });
   }
 
+  delete(id) {
+    this.setState({
+      lanes: this.lanes.filter((lane) => lane.id !== id)
+    });
+  }
+
+  update(updatedLane) {
+    this.setState({
+      lanes: this.lanes.map((lane) => {
+        if (lane.id === updatedLane.id) {
+          console.log(lane, updatedLane);
+          return Object.assign({}, lane, updatedLane);
+        }
+
+        return lane;
+      })
+    });
+  }
+
   attachToLane({laneId, noteId}) {
     this.setState({
       lanes: this.lanes.map(lane => {
